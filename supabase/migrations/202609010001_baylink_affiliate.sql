@@ -1,4 +1,3 @@
--- BayLINK Affiliate core schema. Run in the BayLINK Affiliates Supabase project.
 create extension if not exists pgcrypto;
 
 create table if not exists public.affiliate_profiles (
@@ -44,26 +43,64 @@ alter table public.affiliate_offers enable row level security;
 alter table public.affiliate_clicks enable row level security;
 alter table public.affiliate_conversions enable row level security;
 
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+stable
+as $$
+  select exists (select 1 from public.affiliate_profiles where id = auth.uid() and role = 'admin');
+$$;
+revoke all on function public.is_admin() from public;
+grant execute on function public.is_admin() to authenticated;
+
 drop policy if exists "profiles own read" on public.affiliate_profiles;
+drop policy if exists "profiles admin read" on public.affiliate_profiles;
 create policy "profiles own read" on public.affiliate_profiles for select to authenticated using ((select auth.uid())=id);
+create policy "profiles admin read" on public.affiliate_profiles for select to authenticated using (public.is_admin());
 
 drop policy if exists "business public approved read" on public.business_profiles;
+drop policy if exists "business admin read" on public.business_profiles;
 create policy "business public approved read" on public.business_profiles for select to anon, authenticated using (approved=true or owner_id=(select auth.uid()));
+create policy "business admin read" on public.business_profiles for select to authenticated using (public.is_admin());
 
 drop policy if exists "offers public active read" on public.affiliate_offers;
+drop policy if exists "offers admin read" on public.affiliate_offers;
 create policy "offers public active read" on public.affiliate_offers for select to anon, authenticated using (active=true);
+create policy "offers admin read" on public.affiliate_offers for select to authenticated using (public.is_admin());
 
 drop policy if exists "affiliate own clicks" on public.affiliate_clicks;
+drop policy if exists "affiliate insert clicks" on public.affiliate_clicks;
+drop policy if exists "affiliate admin read" on public.affiliate_clicks;
 create policy "affiliate own clicks" on public.affiliate_clicks for select to authenticated using ((select auth.uid())=affiliate_id);
 create policy "affiliate insert clicks" on public.affiliate_clicks for insert to authenticated with check ((select auth.uid())=affiliate_id);
+create policy "affiliate admin read" on public.affiliate_clicks for select to authenticated using (public.is_admin());
 
 drop policy if exists "affiliate own conversions" on public.affiliate_conversions;
+drop policy if exists "affiliate admin read conversions" on public.affiliate_conversions;
 create policy "affiliate own conversions" on public.affiliate_conversions for select to authenticated using ((select auth.uid())=affiliate_id);
+create policy "affiliate admin read conversions" on public.affiliate_conversions for select to authenticated using (public.is_admin());
 
-do $$ begin
-  if not exists (select 1 from pg_trigger where tgname='handle_affiliate_profile') then
-    create or replace function public.handle_new_affiliate_profile() returns trigger language plpgsql security invoker as $$
-    begin insert into public.affiliate_profiles(id,display_name,role) values(new.id,new.raw_user_meta_data->>'display_name',coalesce(new.raw_user_meta_data->>'requested_role','affiliate')); return new; end; $$;
-    create trigger handle_affiliate_profile after insert on auth.users for each row execute function public.handle_new_affiliate_profile();
-  end if;
-end $$;
+-- New users can request only affiliate or business. Admin is assigned separately.
+create or replace function public.handle_new_affiliate_profile()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.affiliate_profiles(id, display_name, role)
+  values (
+    new.id,
+    new.raw_user_meta_data->>'display_name',
+    case when new.raw_user_meta_data->>'requested_role' = 'business' then 'business' else 'affiliate' end
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+revoke all on function public.handle_new_affiliate_profile() from public;
+
+drop trigger if exists handle_affiliate_profile on auth.users;
+create trigger handle_affiliate_profile after insert on auth.users for each row execute function public.handle_new_affiliate_profile();
