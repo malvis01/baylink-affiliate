@@ -1,24 +1,29 @@
 import { createClient } from '@supabase/supabase-js';
 
-const url = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+// Netlify normally injects these Vite variables at build time. The public
+// Supabase URL and publishable key are also safe to use as frontend fallbacks.
+const url = (
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://tqcuhkprbwejkgoqckgb.supabase.co'
+).trim();
+
 const key = (
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  ''
+  'sb_publishable_TgS6nWMUMNDT040BQRqe-g_kfmeaQ8U'
 ).trim();
 
 let supabase = null;
 let supabaseConfigError = '';
 
-if (url && key) {
-  try {
-    supabase = createClient(url, key);
-  } catch (error) {
-    supabaseConfigError = error?.message || 'Supabase configuration is invalid.';
-    console.error('BayLINK Supabase initialization failed:', error);
+try {
+  if (!url || !key) {
+    throw new Error('Supabase URL or publishable key is missing.');
   }
-} else {
-  supabaseConfigError = 'Missing VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY.';
+  supabase = createClient(url, key);
+} catch (error) {
+  supabaseConfigError = error?.message || 'Supabase configuration is invalid.';
+  console.error('BayLINK Supabase initialization failed:', error);
 }
 
 export { supabase, supabaseConfigError };
