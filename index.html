@@ -11,25 +11,16 @@
       .boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}
       .boot-card{max-width:520px;background:#fff;border:1px solid #e6ebf0;border-radius:18px;padding:28px;box-shadow:0 12px 40px rgba(16,32,51,.08)}
       .boot-card h1{margin:0 0 10px}.boot-card p{color:#64748b;line-height:1.5}.boot-error{color:#b42318;white-space:pre-wrap;word-break:break-word;font-size:13px;text-align:left;background:#fff4f2;padding:12px;border-radius:10px}
+      .growth-launcher{position:fixed;right:18px;bottom:18px;z-index:99999;border:0;border-radius:999px;padding:13px 18px;background:#102033;color:#fff;font-weight:700;box-shadow:0 8px 30px rgba(16,32,51,.25);cursor:pointer}
+      .growth-launcher:hover{transform:translateY(-1px)}
     </style>
   </head>
   <body>
-    <div id="root">
-      <div class="boot"><div class="boot-card"><h1>BayLINK Affiliate</h1><p>Loading the application…</p></div></div>
-    </div>
+    <div id="root"><div class="boot"><div class="boot-card"><h1>BayLINK Affiliate</h1><p>Loading the application…</p></div></div></div>
+    <button class="growth-launcher" type="button" onclick="window.location.href='/growth-engine.html'">🚀 Growth Engine</button>
     <script>
-      window.addEventListener('error', function (event) {
-        var root = document.getElementById('root');
-        if (root && event.error) {
-          root.innerHTML = '<div class="boot"><div class="boot-card"><h1>BayLINK Affiliate</h1><p>The application encountered a startup error.</p><div class="boot-error">' + String(event.error.message || event.message || 'Unknown startup error').replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}) + '</div><p>Please refresh once. If this remains, the error shown here identifies what needs fixing.</p></div></div>';
-        }
-      });
-      window.addEventListener('unhandledrejection', function (event) {
-        var root = document.getElementById('root');
-        if (root && event.reason) {
-          root.innerHTML = '<div class="boot"><div class="boot-card"><h1>BayLINK Affiliate</h1><p>The application encountered a startup error.</p><div class="boot-error">' + String(event.reason.message || event.reason || 'Unknown startup error').replace(/[&<>]/g, function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];}) + '</div></div></div>';
-        }
-      });
+      window.addEventListener('error', function (event) {var root=document.getElementById('root');if(root&&event.error){root.innerHTML='<div class="boot"><div class="boot-card"><h1>BayLINK Affiliate</h1><p>The application encountered a startup error.</p><div class="boot-error">'+String(event.error.message||event.message||'Unknown startup error').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})+'</div><p>Please refresh once. If this remains, the error shown here identifies what needs fixing.</p></div></div>';}});
+      window.addEventListener('unhandledrejection', function (event) {var root=document.getElementById('root');if(root&&event.reason){root.innerHTML='<div class="boot"><div class="boot-card"><h1>BayLINK Affiliate</h1><p>The application encountered a startup error.</p><div class="boot-error">'+String(event.reason.message||event.reason||'Unknown startup error').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})+'</div></div></div>';}});
     </script>
     <script type="module" src="/src/main.jsx"></script>
   </body>
