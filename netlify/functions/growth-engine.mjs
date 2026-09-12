@@ -133,6 +133,5 @@ export default async (req) => {
 };
 
 export const config = {
-  path: '/api/growth-engine',
-  schedule: '0 */6 * * *'
+  path: '/api/growth-engine'
 };
